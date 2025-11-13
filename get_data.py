@@ -4,9 +4,7 @@ import pandas as pd
 import numpy as np
 import time
 
-# ------------------------------------------------------------
-# 1. API KEY (from environment variable, NOT hardcoded)
-# ------------------------------------------------------------
+
 AQI_TOKEN = os.getenv("AQI_TOKEN")
 
 if AQI_TOKEN is None:
@@ -14,13 +12,9 @@ if AQI_TOKEN is None:
         "Missing AQI_TOKEN.\nSet it with:\n\n    export AQI_TOKEN='your_key_here'\n"
     )
 
-# ------------------------------------------------------------
-# 2. Generate a lat/lon grid across the USA
-# ------------------------------------------------------------
-# Latitude range roughly 25 to 49 (continental US)
-# Longitude range roughly -124 to -66
 
-NUM_POINTS = 250   # Change this to 300 or 400 if you want even more data
+
+NUM_POINTS = 250  
 
 np.random.seed(42)
 lats = np.random.uniform(25, 49, NUM_POINTS)
@@ -29,9 +23,7 @@ lons = np.random.uniform(-124, -66, NUM_POINTS)
 locations = list(zip(lats, lons))
 
 
-# ------------------------------------------------------------
-# 3. Helper: Get AQICN data
-# ------------------------------------------------------------
+
 def get_air_quality(lat, lon):
     url = f"https://api.waqi.info/feed/geo:{lat:.4f};{lon:.4f}/?token={AQI_TOKEN}"
     r = requests.get(url)
@@ -63,9 +55,6 @@ def get_air_quality(lat, lon):
     }
 
 
-# ------------------------------------------------------------
-# 4. Helper: Get weather data for each location (Open-Meteo)
-# ------------------------------------------------------------
 def get_weather(lat, lon):
     url = "https://api.open-meteo.com/v1/forecast"
     params = {
@@ -86,9 +75,7 @@ def get_weather(lat, lon):
     }
 
 
-# ------------------------------------------------------------
-# 5. MAIN PIPELINE
-# ------------------------------------------------------------
+
 def collect_data():
     rows = []
 
@@ -104,11 +91,10 @@ def collect_data():
         row = {**aq, **wx}
         rows.append(row)
 
-        time.sleep(1.0)  # avoid rate limits
+        time.sleep(1.0)  
 
     df = pd.DataFrame(rows)
 
-    # Clean pollutant columns: replace "-" with NaN, force numeric types
     pollutant_cols = ["pm25", "pm10", "o3", "no2", "so2", "co", "aqi"]
     for col in pollutant_cols:
         df[col] = pd.to_numeric(df[col], errors="coerce")
@@ -116,9 +102,7 @@ def collect_data():
     return df
 
 
-# ------------------------------------------------------------
-# 6. SCRIPT ENTRY POINT
-# ------------------------------------------------------------
+
 if __name__ == "__main__":
     df = collect_data()
 
